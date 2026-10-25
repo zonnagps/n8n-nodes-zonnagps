@@ -18,7 +18,7 @@ export class ZonnaGpsTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'ZonnaGPS Trigger',
 		name: 'zonnaGpsTrigger',
-		icon: 'file:zonnagps.svg',
+		icon: { light: 'file:zonnagps.svg', dark: 'file:zonnagps.dark.svg' },
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["events"].join(", ")}}',
@@ -101,8 +101,9 @@ export class ZonnaGpsTrigger implements INodeType {
 							url: `${apiBase(credentials.baseUrl as string | undefined)}/webhooks/${staticData.webhookId as number}`,
 							json: true,
 						});
-					} catch {
+					} catch (error) {
 						// Ya borrada (por ejemplo, desde Ajustes → Integraciones): no impide desactivar el flujo.
+						this.logger.warn(`ZonnaGPS: no se pudo dar de baja el webhook ${staticData.webhookId as number}: ${(error as Error).message}`);
 					}
 				}
 				delete staticData.webhookId;

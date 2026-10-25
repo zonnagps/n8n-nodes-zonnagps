@@ -20,7 +20,7 @@ export class ZonnaGps implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'ZonnaGPS',
 		name: 'zonnaGps',
-		icon: 'file:zonnagps.svg',
+		icon: { light: 'file:zonnagps.svg', dark: 'file:zonnagps.dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -37,11 +37,11 @@ export class ZonnaGps implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'Vehículo', value: 'vehicle' },
 					{ name: 'Conductor', value: 'driver' },
-					{ name: 'Lugar', value: 'place' },
 					{ name: 'DeCA', value: 'deca' },
-					{ name: 'Enlace De Datos', value: 'report' },
+					{ name: 'Informe', value: 'report' },
+					{ name: 'Lugar', value: 'place' },
+					{ name: 'Vehículo', value: 'vehicle' },
 				],
 				default: 'vehicle',
 			},
@@ -52,10 +52,10 @@ export class ZonnaGps implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['vehicle'] } },
 				options: [
-					{ name: 'Buscar', value: 'search', action: 'Buscar vehículos', description: 'Por matrícula o nombre (assets.list)' },
-					{ name: 'Obtener', value: 'get', action: 'Obtener un vehículo', description: 'Ficha del vehículo (assets.read)' },
-					{ name: 'Última Posición', value: 'position', action: 'Obtener la última posición', description: 'positions.latest' },
-					{ name: 'Asignar Conductor', value: 'assignDriver', action: 'Asignar conductor a un vehículo', description: 'assets.assign_driver' },
+					{ name: 'Buscar', value: 'search', action: 'Search vehicles', description: 'Por matrícula o nombre (assets.list)' },
+					{ name: 'Obtener', value: 'get', action: 'Get a vehicle', description: 'Ficha del vehículo (assets.read)' },
+					{ name: 'Última Posición', value: 'position', action: 'Get the latest position', description: 'Última posición conocida (positions.latest)' },
+					{ name: 'Asignar Conductor', value: 'assignDriver', action: 'Assign a driver to a vehicle', description: 'Asigna el conductor al vehículo (assets.assign_driver)' },
 				],
 				default: 'search',
 			},
@@ -66,8 +66,8 @@ export class ZonnaGps implements INodeType {
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['driver'] } },
 				options: [
-					{ name: 'Buscar', value: 'search', action: 'Buscar conductores', description: 'Por nombre o NIF (drivers.list)' },
-					{ name: 'Crear', value: 'create', action: 'Crear un conductor', description: 'drivers.create' },
+					{ name: 'Buscar', value: 'search', action: 'Search drivers', description: 'Por nombre o NIF (drivers.list)' },
+					{ name: 'Crear', value: 'create', action: 'Create a driver', description: 'Da de alta un conductor (drivers.create)' },
 				],
 				default: 'search',
 			},
@@ -77,7 +77,7 @@ export class ZonnaGps implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['place'] } },
-				options: [{ name: 'Crear', value: 'create', action: 'Crear un lugar', description: 'places.create' }],
+				options: [{ name: 'Crear', value: 'create', action: 'Create a place', description: 'Guarda un lugar de carga o descarga (places.create)' }],
 				default: 'create',
 			},
 			{
@@ -86,7 +86,7 @@ export class ZonnaGps implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['deca'] } },
-				options: [{ name: 'Crear Borrador', value: 'createDraft', action: 'Crear un borrador de DeCA', description: 'deca.drafts.create' }],
+				options: [{ name: 'Crear Borrador', value: 'createDraft', action: 'Create a transport document draft', description: 'Borrador de DeCA para revisar y emitir en ZonnaGPS (deca.drafts.create)' }],
 				default: 'createDraft',
 			},
 			{
@@ -95,7 +95,7 @@ export class ZonnaGps implements INodeType {
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['report'] } },
-				options: [{ name: 'Obtener Tabla', value: 'get', action: 'Obtener una tabla de datos', description: 'reports.read' }],
+				options: [{ name: 'Obtener Tabla', value: 'get', action: 'Get a data table', description: 'Tabla del enlace de datos (reports.read)' }],
 				default: 'get',
 			},
 
@@ -150,7 +150,7 @@ export class ZonnaGps implements INodeType {
 			},
 			{ displayName: 'Desde', name: 'from', type: 'string', default: '', placeholder: 'AAAA-MM-DD', displayOptions: { show: { resource: ['report'] } } },
 			{ displayName: 'Hasta', name: 'to', type: 'string', default: '', placeholder: 'AAAA-MM-DD', displayOptions: { show: { resource: ['report'] } } },
-			{ displayName: 'Todas Las Páginas', name: 'returnAll', type: 'boolean', default: true, displayOptions: { show: { resource: ['report'] } } },
+			{ displayName: 'Todas Las Páginas', name: 'returnAll', type: 'boolean', description: 'Whether to return all results or only up to a given limit', default: true, displayOptions: { show: { resource: ['report'] } } },
 		],
 	};
 
@@ -256,7 +256,11 @@ export class ZonnaGps implements INodeType {
 					out.push({ json: { error: (error as Error).message }, pairedItem: { item: i } });
 					continue;
 				}
-				throw error;
+				// Los fallos de la API llegan como errores HTTP; los nuestros (operación no admitida) ya traen su texto.
+				if (error instanceof NodeOperationError) {
+					throw new NodeOperationError(this.getNode(), error, { itemIndex: i });
+				}
+				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
 			}
 		}
 
