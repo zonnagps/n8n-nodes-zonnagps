@@ -1,0 +1,25 @@
+# Publica en npm al crear una etiqueta vX.Y.Z, con procedencia (provenance) y publicación de
+# confianza (OIDC): npm comprueba que viene de este repositorio y de este workflow, sin token guardado.
+name: Publicar en npm
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      # La publicación de confianza necesita npm 11.5.1 o posterior.
+      - run: npm install -g npm@11
+      - run: npm ci
+      - run: npm test
+      - name: Comprobar que la etiqueta coincide con package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm publish --provenance --access public
