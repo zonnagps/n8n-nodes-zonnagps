@@ -1,12 +1,12 @@
 {
   "name": "n8n-nodes-zonnagps",
-  "version": "1.0.3",
-  "description": "Nodo comunitario de n8n para ZonnaGPS: vehículos, conductores, lugares, DeCA, enlace de datos y trigger por webhook firmado.",
+  "version": "1.0.4",
+  "description": "n8n community node for ZonnaGPS fleet management: vehicles, drivers, places, transport documents (DeCA), data tables and a signed webhook trigger.",
   "keywords": [
     "n8n-community-node-package",
     "zonnagps",
     "gps",
-    "flotas",
+    "fleet-management",
     "deca"
   ],
   "license": "MIT",

@@ -1,6 +1,6 @@
 import type { IAuthenticateGeneric, ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
 
-/** Clave de API de ZonnaGPS (Ajustes → Integraciones del mapa). La prueba usa el permiso webhooks.list. */
+/** ZonnaGPS API key (Settings → Integrations). The credential test needs the webhooks.list permission. */
 export class ZonnaGpsApi implements ICredentialType {
 	name = 'zonnaGpsApi';
 
@@ -12,20 +12,20 @@ export class ZonnaGpsApi implements ICredentialType {
 
 	properties: INodeProperties[] = [
 		{
-			displayName: 'Clave de API',
+			displayName: 'API Key',
 			name: 'apiKey',
 			type: 'string',
 			typeOptions: { password: true },
 			default: '',
 			required: true,
-			description: 'Créala en ZonnaGPS: Ajustes → Integraciones → Nueva clave',
+			description: 'Create it in ZonnaGPS: Settings → Integrations → New key',
 		},
 		{
-			displayName: 'Servidor',
+			displayName: 'Server URL',
 			name: 'baseUrl',
 			type: 'string',
 			default: 'https://app.zonnagps.es',
-			description: 'Para el entorno de pruebas: https://pruebas.app.zonnagps.es',
+			description: 'ZonnaGPS server address. Use https://pruebas.app.zonnagps.es for the staging environment.',
 		},
 	];
 

@@ -13,8 +13,8 @@ import {
 import { apiBase } from '../../lib/signature';
 
 /**
- * Nodo ZonnaGPS: las mismas operaciones que las apps de Zapier y Make, contra la API pública v1.
- * Cada operación necesita su permiso en la clave (se indica en la descripción).
+ * ZonnaGPS node: the same operations as the Zapier and Make apps, against public API v1.
+ * Each operation needs its own permission on the API key (shown in its description).
  */
 export class ZonnaGps implements INodeType {
 	description: INodeTypeDescription = {
@@ -24,7 +24,7 @@ export class ZonnaGps implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Vehículos, conductores, lugares, DeCA y enlace de datos de ZonnaGPS',
+		description: 'Work with ZonnaGPS vehicles, drivers, places, transport documents (DeCA) and data tables',
 		defaults: { name: 'ZonnaGPS' },
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
@@ -32,125 +32,125 @@ export class ZonnaGps implements INodeType {
 		credentials: [{ name: 'zonnaGpsApi', required: true }],
 		properties: [
 			{
-				displayName: 'Recurso',
+				displayName: 'Resource',
 				name: 'resource',
 				type: 'options',
 				noDataExpression: true,
 				options: [
-					{ name: 'Conductor', value: 'driver' },
-					{ name: 'DeCA', value: 'deca' },
-					{ name: 'Informe', value: 'report' },
-					{ name: 'Lugar', value: 'place' },
-					{ name: 'Vehículo', value: 'vehicle' },
+					{ name: 'Data Table', value: 'report' },
+					{ name: 'Driver', value: 'driver' },
+					{ name: 'Place', value: 'place' },
+					{ name: 'Transport Document (DeCA)', value: 'deca' },
+					{ name: 'Vehicle', value: 'vehicle' },
 				],
 				default: 'vehicle',
 			},
 			{
-				displayName: 'Operación',
+				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['vehicle'] } },
 				options: [
-					{ name: 'Buscar', value: 'search', action: 'Search vehicles', description: 'Por matrícula o nombre (assets.list)' },
-					{ name: 'Obtener', value: 'get', action: 'Get a vehicle', description: 'Ficha del vehículo (assets.read)' },
-					{ name: 'Última Posición', value: 'position', action: 'Get the latest position', description: 'Última posición conocida (positions.latest)' },
-					{ name: 'Asignar Conductor', value: 'assignDriver', action: 'Assign a driver to a vehicle', description: 'Asigna el conductor al vehículo (assets.assign_driver)' },
+					{ name: 'Assign Driver', value: 'assignDriver', action: 'Assign a driver to a vehicle', description: 'Assign a driver to the vehicle (requires assets.assign_driver)' },
+					{ name: 'Get', value: 'get', action: 'Get a vehicle', description: 'Get the vehicle details (requires assets.read)' },
+					{ name: 'Get Latest Position', value: 'position', action: 'Get the latest position', description: 'Get the last known position (requires positions.latest)' },
+					{ name: 'Search', value: 'search', action: 'Search vehicles', description: 'Search by license plate or name (requires assets.list)' },
 				],
 				default: 'search',
 			},
 			{
-				displayName: 'Operación',
+				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['driver'] } },
 				options: [
-					{ name: 'Buscar', value: 'search', action: 'Search drivers', description: 'Por nombre o NIF (drivers.list)' },
-					{ name: 'Crear', value: 'create', action: 'Create a driver', description: 'Da de alta un conductor (drivers.create)' },
+					{ name: 'Create', value: 'create', action: 'Create a driver', description: 'Create a new driver (requires drivers.create)' },
+					{ name: 'Search', value: 'search', action: 'Search drivers', description: 'Search by name or tax ID (requires drivers.list)' },
 				],
 				default: 'search',
 			},
 			{
-				displayName: 'Operación',
+				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['place'] } },
-				options: [{ name: 'Crear', value: 'create', action: 'Create a place', description: 'Guarda un lugar de carga o descarga (places.create)' }],
+				options: [{ name: 'Create', value: 'create', action: 'Create a place', description: 'Save a loading or unloading place (requires places.create)' }],
 				default: 'create',
 			},
 			{
-				displayName: 'Operación',
+				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['deca'] } },
-				options: [{ name: 'Crear Borrador', value: 'createDraft', action: 'Create a transport document draft', description: 'Borrador de DeCA para revisar y emitir en ZonnaGPS (deca.drafts.create)' }],
+				options: [{ name: 'Create Draft', value: 'createDraft', action: 'Create a transport document draft', description: 'Create a DeCA draft to review and issue in ZonnaGPS (requires deca.drafts.create)' }],
 				default: 'createDraft',
 			},
 			{
-				displayName: 'Operación',
+				displayName: 'Operation',
 				name: 'operation',
 				type: 'options',
 				noDataExpression: true,
 				displayOptions: { show: { resource: ['report'] } },
-				options: [{ name: 'Obtener Tabla', value: 'get', action: 'Get a data table', description: 'Tabla del enlace de datos (reports.read)' }],
+				options: [{ name: 'Get', value: 'get', action: 'Get a data table', description: 'Get the rows of a data table (requires reports.read)' }],
 				default: 'get',
 			},
 
-			// Vehículo
-			{ displayName: 'Matrícula O Nombre', name: 'search', type: 'string', default: '', displayOptions: { show: { resource: ['vehicle'], operation: ['search'] } } },
-			{ displayName: 'ID Del Vehículo', name: 'assetId', type: 'number', default: 0, required: true, displayOptions: { show: { resource: ['vehicle'], operation: ['get', 'position', 'assignDriver'] } } },
-			{ displayName: 'ID Del Conductor', name: 'driverId', type: 'number', default: 0, required: true, displayOptions: { show: { resource: ['vehicle'], operation: ['assignDriver'] } } },
+			// Vehicle
+			{ displayName: 'License Plate or Name', name: 'search', type: 'string', default: '', description: 'Text to search for in the license plate or vehicle name', displayOptions: { show: { resource: ['vehicle'], operation: ['search'] } } },
+			{ displayName: 'Vehicle ID', name: 'assetId', type: 'number', default: 0, required: true, displayOptions: { show: { resource: ['vehicle'], operation: ['get', 'position', 'assignDriver'] } } },
+			{ displayName: 'Driver ID', name: 'driverId', type: 'number', default: 0, required: true, displayOptions: { show: { resource: ['vehicle'], operation: ['assignDriver'] } } },
 
-			// Conductor
-			{ displayName: 'Nombre', name: 'name', type: 'string', default: '', displayOptions: { show: { resource: ['driver'], operation: ['search'] } } },
-			{ displayName: 'NIF', name: 'nif', type: 'string', default: '', displayOptions: { show: { resource: ['driver'], operation: ['search', 'create'] } } },
-			{ displayName: 'Nombre', name: 'driverName', type: 'string', default: '', required: true, displayOptions: { show: { resource: ['driver'], operation: ['create'] } } },
-			{ displayName: 'Teléfono', name: 'phone', type: 'string', default: '', displayOptions: { show: { resource: ['driver'], operation: ['create'] } } },
+			// Driver
+			{ displayName: 'Name', name: 'name', type: 'string', default: '', description: 'Text to search for in the driver name', displayOptions: { show: { resource: ['driver'], operation: ['search'] } } },
+			{ displayName: 'Tax ID (NIF)', name: 'nif', type: 'string', default: '', description: 'Spanish tax identification number of the driver', displayOptions: { show: { resource: ['driver'], operation: ['search', 'create'] } } },
+			{ displayName: 'Name', name: 'driverName', type: 'string', default: '', required: true, displayOptions: { show: { resource: ['driver'], operation: ['create'] } } },
+			{ displayName: 'Phone', name: 'phone', type: 'string', default: '', displayOptions: { show: { resource: ['driver'], operation: ['create'] } } },
 
-			// Lugar
-			{ displayName: 'Nombre', name: 'placeName', type: 'string', default: '', required: true, displayOptions: { show: { resource: ['place'] } } },
-			{ displayName: 'Dirección', name: 'address', type: 'string', default: '', displayOptions: { show: { resource: ['place'] } } },
-			{ displayName: 'Latitud', name: 'latitude', type: 'number', typeOptions: { numberPrecision: 6 }, default: 0, required: true, displayOptions: { show: { resource: ['place'] } } },
-			{ displayName: 'Longitud', name: 'longitude', type: 'number', typeOptions: { numberPrecision: 6 }, default: 0, required: true, displayOptions: { show: { resource: ['place'] } } },
-			{ displayName: 'Radio (M)', name: 'radius', type: 'number', default: 150, displayOptions: { show: { resource: ['place'] } } },
+			// Place
+			{ displayName: 'Name', name: 'placeName', type: 'string', default: '', required: true, displayOptions: { show: { resource: ['place'] } } },
+			{ displayName: 'Address', name: 'address', type: 'string', default: '', displayOptions: { show: { resource: ['place'] } } },
+			{ displayName: 'Latitude', name: 'latitude', type: 'number', typeOptions: { numberPrecision: 6 }, default: 0, required: true, displayOptions: { show: { resource: ['place'] } } },
+			{ displayName: 'Longitude', name: 'longitude', type: 'number', typeOptions: { numberPrecision: 6 }, default: 0, required: true, displayOptions: { show: { resource: ['place'] } } },
+			{ displayName: 'Radius (Meters)', name: 'radius', type: 'number', default: 150, description: 'Radius around the coordinates that counts as being at the place', displayOptions: { show: { resource: ['place'] } } },
 
-			// DeCA
+			// Transport document (DeCA)
 			{
-				displayName: 'Tipo',
+				displayName: 'Document Type',
 				name: 'documentType',
 				type: 'options',
 				options: [
-					{ name: 'Mercancías', value: 'deca_goods' },
-					{ name: 'Viajeros', value: 'deca_passengers' },
+					{ name: 'Goods', value: 'deca_goods' },
+					{ name: 'Passengers', value: 'deca_passengers' },
 				],
 				default: 'deca_goods',
 				displayOptions: { show: { resource: ['deca'] } },
 			},
-			{ displayName: 'Inicio Del Servicio', name: 'serviceStartsAt', type: 'string', default: '', required: true, placeholder: '2026-10-20 o 2026-10-20T08:00', displayOptions: { show: { resource: ['deca'] } } },
-			{ displayName: 'ID Del Conductor', name: 'decaDriverId', type: 'number', default: 0, displayOptions: { show: { resource: ['deca'] } } },
-			{ displayName: 'Datos Del DeCA (JSON)', name: 'decaData', type: 'json', default: '{\n  "vehicle_plate": "1234ABC",\n  "origin": "Madrid",\n  "destination": "Toledo"\n}', description: 'Campos «data» según la documentación (/api/docs)', displayOptions: { show: { resource: ['deca'] } } },
+			{ displayName: 'Service Start', name: 'serviceStartsAt', type: 'string', default: '', required: true, placeholder: 'e.g. 2026-10-20 or 2026-10-20T08:00', description: 'Date, or date and time, when the transport service starts', displayOptions: { show: { resource: ['deca'] } } },
+			{ displayName: 'Driver ID', name: 'decaDriverId', type: 'number', default: 0, description: 'Optional driver to assign to the document (0 for none)', displayOptions: { show: { resource: ['deca'] } } },
+			{ displayName: 'Document Data (JSON)', name: 'decaData', type: 'json', default: '{\n  "vehicle_plate": "1234ABC",\n  "origin": "Madrid",\n  "destination": "Toledo"\n}', description: 'The "data" fields of the transport document, as described in the API documentation (/api/docs)', displayOptions: { show: { resource: ['deca'] } } },
 
-			// Enlace de datos
+			// Data tables
 			{
-				displayName: 'Tabla',
+				displayName: 'Table',
 				name: 'dataset',
 				type: 'options',
 				options: [
-					{ name: 'Alertas', value: 'alerts' },
-					{ name: 'DeCA Emitidos', value: 'deca' },
-					{ name: 'Indicadores Diarios Por Conductor', value: 'driver-daily' },
-					{ name: 'Indicadores Diarios Por Vehículo', value: 'vehicle-daily' },
-					{ name: 'Vehículos', value: 'vehicles' },
+					{ name: 'Alerts', value: 'alerts' },
+					{ name: 'Daily Driver Metrics', value: 'driver-daily' },
+					{ name: 'Daily Vehicle Metrics', value: 'vehicle-daily' },
+					{ name: 'Issued Transport Documents (DeCA)', value: 'deca' },
+					{ name: 'Vehicles', value: 'vehicles' },
 				],
 				default: 'vehicle-daily',
 				displayOptions: { show: { resource: ['report'] } },
 			},
-			{ displayName: 'Desde', name: 'from', type: 'string', default: '', placeholder: 'AAAA-MM-DD', displayOptions: { show: { resource: ['report'] } } },
-			{ displayName: 'Hasta', name: 'to', type: 'string', default: '', placeholder: 'AAAA-MM-DD', displayOptions: { show: { resource: ['report'] } } },
-			{ displayName: 'Todas Las Páginas', name: 'returnAll', type: 'boolean', description: 'Whether to return all results or only up to a given limit', default: true, displayOptions: { show: { resource: ['report'] } } },
+			{ displayName: 'From Date', name: 'from', type: 'string', default: '', placeholder: 'YYYY-MM-DD', description: 'First day to include (optional)', displayOptions: { show: { resource: ['report'] } } },
+			{ displayName: 'To Date', name: 'to', type: 'string', default: '', placeholder: 'YYYY-MM-DD', description: 'Last day to include (optional)', displayOptions: { show: { resource: ['report'] } } },
+			{ displayName: 'Return All', name: 'returnAll', type: 'boolean', description: 'Whether to return all results or only up to a given limit', default: true, displayOptions: { show: { resource: ['report'] } } },
 		],
 	};
 
@@ -216,7 +216,7 @@ export class ZonnaGps implements INodeType {
 					try {
 						data = (typeof raw === 'string' ? JSON.parse(raw || '{}') : raw) as IDataObject;
 					} catch {
-						throw new NodeOperationError(this.getNode(), '«Datos del DeCA» no es un JSON válido.', { itemIndex: i });
+						throw new NodeOperationError(this.getNode(), '"Document Data (JSON)" is not valid JSON', { itemIndex: i });
 					}
 					const type = this.getNodeParameter('documentType', i) as string;
 					const driverId = this.getNodeParameter('decaDriverId', i) as number;
@@ -245,7 +245,7 @@ export class ZonnaGps implements INodeType {
 					}
 					result = rows;
 				} else {
-					throw new NodeOperationError(this.getNode(), `Operación no admitida: ${resource}/${operation}`, { itemIndex: i });
+					throw new NodeOperationError(this.getNode(), `Unsupported operation: ${resource}/${operation}`, { itemIndex: i });
 				}
 
 				for (const row of Array.isArray(result) ? result : [result]) {
@@ -256,7 +256,7 @@ export class ZonnaGps implements INodeType {
 					out.push({ json: { error: (error as Error).message }, pairedItem: { item: i } });
 					continue;
 				}
-				// Los fallos de la API llegan como errores HTTP; los nuestros (operación no admitida) ya traen su texto.
+				// API failures arrive as HTTP errors; our own errors (e.g. unsupported operation) already carry their message.
 				if (error instanceof NodeOperationError) {
 					throw new NodeOperationError(this.getNode(), error, { itemIndex: i });
 				}

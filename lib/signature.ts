@@ -1,9 +1,9 @@
 import { createHmac, timingSafeEqual } from 'crypto';
 
 /**
- * Comprueba la cabecera X-Zonna-Signature (t=<unix>,v1=<hex>) de un webhook de ZonnaGPS:
- * HMAC-SHA256 de «t.cuerpo_original» con el secreto, comparación en tiempo constante y marca de
- * tiempo con una tolerancia (por defecto cinco minutos).
+ * Verifies the X-Zonna-Signature header (t=<unix>,v1=<hex>) of a ZonnaGPS webhook:
+ * HMAC-SHA256 of "t.raw_body" with the secret, constant-time comparison, and a timestamp
+ * tolerance (five minutes by default).
  */
 export function verifyZonnaSignature(rawBody: string | Buffer, header: string | undefined, secret: string, toleranceSeconds = 300, now = Date.now()): boolean {
 	if (!header || !secret) return false;

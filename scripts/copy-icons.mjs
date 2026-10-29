@@ -1,4 +1,4 @@
-// Copia los iconos SVG junto a los nodos y la credencial compilados (n8n los busca al lado del .js).
+// Copies the SVG icons next to the compiled nodes and credential (n8n looks for them beside the .js).
 import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
 
 for (const dir of ['nodes/ZonnaGps', 'nodes/ZonnaGpsTrigger', 'credentials']) {

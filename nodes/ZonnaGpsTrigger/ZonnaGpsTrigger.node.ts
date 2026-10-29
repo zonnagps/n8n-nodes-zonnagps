@@ -10,9 +10,9 @@ import {
 import { apiBase, verifyZonnaSignature } from '../../lib/signature';
 
 /**
- * Trigger de ZonnaGPS: al activar el flujo suscribe la URL del webhook de n8n a los eventos elegidos
- * (POST /webhooks, permisos webhooks.create/list/delete) y guarda el secreto de firma; al
- * desactivarlo la da de baja. Cada envío se comprueba con X-Zonna-Signature antes de seguir.
+ * ZonnaGPS Trigger: on activation it subscribes the n8n webhook URL to the selected events
+ * (POST /webhooks, permissions webhooks.create/list/delete) and stores the signing secret; on
+ * deactivation it unsubscribes. Every delivery is checked against X-Zonna-Signature first.
  */
 export class ZonnaGpsTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -22,7 +22,7 @@ export class ZonnaGpsTrigger implements INodeType {
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["events"].join(", ")}}',
-		description: 'Arranca el flujo con eventos de ZonnaGPS (alertas, geocercas, DeCA, sin comunicación)',
+		description: 'Starts the workflow on ZonnaGPS events (alerts, geofences, transport documents, offline vehicles)',
 		defaults: { name: 'ZonnaGPS Trigger' },
 		inputs: [],
 		outputs: [NodeConnectionTypes.Main],
@@ -30,32 +30,33 @@ export class ZonnaGpsTrigger implements INodeType {
 		webhooks: [{ name: 'default', httpMethod: 'POST', responseMode: 'onReceived', path: 'webhook' }],
 		properties: [
 			{
-				displayName: 'Eventos',
+				displayName: 'Events',
 				name: 'events',
 				type: 'multiOptions',
 				required: true,
 				options: [
-					{ name: 'Alerta Disparada', value: 'alert.triggered' },
-					{ name: 'DeCA Emitido', value: 'deca.issued' },
-					{ name: 'Entrada en Geocerca', value: 'geofence.enter' },
-					{ name: 'Salida De Geocerca', value: 'geofence.exit' },
-					{ name: 'Vehículo Sin Comunicación', value: 'vehicle.offline' },
+					{ name: 'Alert Triggered', value: 'alert.triggered' },
+					{ name: 'Geofence Entered', value: 'geofence.enter' },
+					{ name: 'Geofence Exited', value: 'geofence.exit' },
+					{ name: 'Transport Document (DeCA) Issued', value: 'deca.issued' },
+					{ name: 'Vehicle Offline', value: 'vehicle.offline' },
 				],
 				default: ['alert.triggered'],
+				description: 'Events that start the workflow',
 			},
 			{
-				displayName: 'Comprobar Firma',
+				displayName: 'Verify Signature',
 				name: 'verifySignature',
 				type: 'boolean',
 				default: true,
 				description: 'Whether to reject requests whose X-Zonna-Signature does not match the stored secret',
 			},
 			{
-				displayName: 'Incluir Envíos De Prueba',
+				displayName: 'Include Test Events',
 				name: 'includeTests',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to also start the workflow with the test event (test.ping) sent from Ajustes → Integraciones',
+				description: 'Whether to also start the workflow with the test event (test.ping) sent from Settings → Integrations in ZonnaGPS',
 			},
 		],
 	};
@@ -102,8 +103,8 @@ export class ZonnaGpsTrigger implements INodeType {
 							json: true,
 						});
 					} catch (error) {
-						// Ya borrada (por ejemplo, desde Ajustes → Integraciones): no impide desactivar el flujo.
-						this.logger.warn(`ZonnaGPS: no se pudo dar de baja el webhook ${staticData.webhookId as number}: ${(error as Error).message}`);
+						// Already deleted (e.g. from Settings → Integrations): it must not block deactivating the workflow.
+						this.logger.warn(`ZonnaGPS: could not delete webhook ${staticData.webhookId as number}: ${(error as Error).message}`);
 					}
 				}
 				delete staticData.webhookId;
@@ -123,7 +124,7 @@ export class ZonnaGpsTrigger implements INodeType {
 			const header = this.getHeaderData()['x-zonna-signature'] as string | undefined;
 			if (!verifyZonnaSignature(raw, header, (staticData.secret as string) ?? '')) {
 				const response = this.getResponseObject();
-				response.status(401).json({ message: 'Firma no válida.' });
+				response.status(401).json({ message: 'Invalid signature' });
 				return { noWebhookResponse: true };
 			}
 		}

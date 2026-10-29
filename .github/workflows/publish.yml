@@ -1,6 +1,6 @@
-# Publica en npm al crear una etiqueta vX.Y.Z, con procedencia (provenance) y publicación de
-# confianza (OIDC): npm comprueba que viene de este repositorio y de este workflow, sin token guardado.
-name: Publicar en npm
+# Publishes to npm when a vX.Y.Z tag is pushed, with provenance and trusted publishing (OIDC):
+# npm verifies the package comes from this repository and workflow, with no stored token.
+name: Publish to npm
 on:
   push:
     tags: ['v*']
@@ -16,10 +16,10 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
-      # La publicación de confianza necesita npm 11.5.1 o posterior.
+      # Trusted publishing requires npm 11.5.1 or later.
       - run: npm install -g npm@11
       - run: npm ci
       - run: npm test
-      - name: Comprobar que la etiqueta coincide con package.json
+      - name: Check that the tag matches package.json
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
       - run: npm publish --provenance --access public
