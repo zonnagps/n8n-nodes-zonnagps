@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-zonnagps",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "n8n community node for ZonnaGPS fleet management: vehicles, drivers, places, transport documents (DeCA), data tables and a signed webhook trigger.",
   "keywords": [
     "n8n-community-node-package",
