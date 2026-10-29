@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-zonnagps",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Nodo comunitario de n8n para ZonnaGPS: vehículos, conductores, lugares, DeCA, enlace de datos y trigger por webhook firmado.",
   "keywords": [
     "n8n-community-node-package",
